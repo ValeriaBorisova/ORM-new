@@ -155,7 +155,7 @@ def create_reservation():
 @app.route('/orders/<id>', methods=['PUT'])
 def update_order(id):
     json = request.get_json()
-    order = Orders.put_by_id(id)
+    order = Orders.get_by_id(id)
     if order.status == 'not_accepted':
         order.address_from = json.get('address_from')
         order.address_to = json.get('address_to')
@@ -172,7 +172,7 @@ def update_order(id):
 def change_order_status(id):
     json = request.get_json()
     new_status = json.get('status')
-    order = Orders.put_by_id(id)
+    order = Orders.get_by_id(id)
     if order.status == 'not_accepted':
         if new_status in ('not_accepted', 'in_progress', 'cancelled'):
             order.status = new_status
