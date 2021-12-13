@@ -19,14 +19,6 @@ class Drivers(Model):
         database = db
 
 
-def create_table():
-    with db:
-        db.create_tables([Drivers])
-
-
-create_table()
-
-
 class Clients(Model):
     id = AutoField(primary_key=True)
     name = CharField(null=False)
@@ -36,17 +28,10 @@ class Clients(Model):
         database = db
 
 
-def create_table():
-    with db:
-        db.create_tables([Clients])
-
-
-create_table()
-
-
 class Reservations(Model):
-    client_id = AutoField(primary_key=True)
-    driver_id = AutoField(primary_key=True)
+    reservation_id = AutoField(primary_key=True)
+    client_id = CharField(null=False)
+    driver_id = CharField(null=False)
     address_from = CharField(null=False)
     address_to = CharField(null=False)
     date_created = CharField(null=False)
@@ -58,10 +43,10 @@ class Reservations(Model):
 
 def create_table():
     with db:
-        db.create_tables([Reservations])
+        db.create_tables([Drivers, Reservations, Clients])
 
 
-create_table()
+# create_table()
 
 
 @app.route('/drivers/<int:id>', methods=['GET'])
@@ -80,7 +65,7 @@ def create_driver():
 
 @app.route('/drivers/<int:id>', methods=['DELETE'])
 def delete_driver(id):
-    delete_driver = Drivers.delete_by_id(id)
+    Drivers.delete_by_id(id)
     return f"Удален  водитель с id : {id}", 204
 
 
@@ -93,7 +78,7 @@ def get_client_by_id(id):
 
 @app.route('/clients/<int:id>', methods=['DELETE'])
 def delete_client(id):
-    delete_client = Clients.delete_by_id(id)
+    Clients.delete_by_id(id)
     return f"Удален клинт с id : {id}", 204
 
 
@@ -104,7 +89,7 @@ def create_client():
     return f"Клиент добавлен с данными id: {client.id}", 201
 
 
-@app.route('/reservations/<int: id>', methods=['GET'])
+@app.route('/reservations/<int:id>', methods=['GET'])
 def get_reservation_by_id(id):
     reservation = Reservations.get_by_id(id)
     data = {"id": reservation.id,
@@ -135,3 +120,32 @@ def create_reservation():
     else:
         return "Клиент / водитель не найден", 404
 
+
+@app.route('/reservations/<id>/change-status', methods=['PUT'])
+def change_reservation_status(id):
+    json = request.get_json()
+    new_status = json.get('status')
+    order = Reservations.get_by_id(id)
+    if order.status == 'not_accepted':
+        if new_status in ('not_accepted', 'in_progress', 'cancelled'):
+            order.status = new_status
+            return f"Статус заказа с id: {order.id} успешно изменен на {new_status}", 200
+        elif new_status == 'done':
+            return f"Статус заказа с id: {order.id} не может быть изменен на {new_status}", 400
+        else:
+            return "Неверный статус заказа", 400
+
+    elif order.status == 'in_progress':
+        if new_status in ('in_progress', 'cancelled', 'done'):
+            order.status = new_status
+            return f"Статус заказа с id: {order.id} успешно изменен на {new_status}", 200
+        elif new_status == 'not_accepted':
+            return f"Статус заказа с id: {order.id} НЕ может быть изменен на {new_status}", 400
+        else:
+            return "Неверный статус заказа", 400
+
+    elif order.status in ('done', 'cancelled'):
+        if new_status in ('in_progress', 'cancelled', 'done', 'not_accepted'):
+            return f"Статус заказа с id: {order.id} НЕ может быть изменен на {new_status}", 400
+        else:
+            return "Неверный статус заказа", 400
