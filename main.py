@@ -149,3 +149,19 @@ def change_reservation_status(id):
             return f"Статус заказа с id: {order.id} НЕ может быть изменен на {new_status}", 400
         else:
             return "Неверный статус заказа", 400
+
+
+@app.route('/reservations/<id>', methods=['PUT'])
+def update_order(id):
+    json = request.get_json()
+    order = Reservations.get_by_id(id)
+    if order.status == 'not_accepted':
+        order.address_from = json.get('address_from')
+        order.address_to = json.get('address_to')
+        order.client_id = json.get('client_id')
+        order.driver_id = json.get('driver_id')
+        order.date_created = datetime.datetime.now()
+        return f"Заказ c id : {order.id} отредактирован", 200
+
+    else:
+        return "Заказ не может быть изменен", 400
