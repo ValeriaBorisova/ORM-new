@@ -10,9 +10,12 @@
 
 ```source venv/bin/activate``` - для Linux и MacOS.
 
+```pip install peewee``` - Установка Peewee
+
 Запускаем flask сервер
 
 ```set FLASK_APP=main.py``` - для Windows
+
 ```export FLASK_APP=main.py``` - для mac
 
 ```flask run```
